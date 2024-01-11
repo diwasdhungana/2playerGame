@@ -11,7 +11,7 @@ class App:
 
         # initilize python
         pg.init()
-        pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF | pg.HWSURFACE | pg.OPENGL)
+        pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF | pg.HWSURFACE | pg.RESIZABLE)
         pg.display.flip()
         pg.display.gl_set_attribute(pg.GL_SWAP_CONTROL, 1)
         self.clock = pg.time.Clock()
@@ -52,6 +52,7 @@ class App:
             for event in pg.event.get():
                 if (event.type == pg.QUIT):
                     running = False
+            
             # refresh screen
             glClear(GL_COLOR_BUFFER_BIT)
 
