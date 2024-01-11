@@ -11,11 +11,16 @@ class App:
 
         # initilize python
         pg.init()
-        pg.display.set_mode((640 , 480), pg.OPENGL|pg.DOUBLEBUF)
+        pg.display.set_mode((640, 480), pg.OPENGL | pg.DOUBLEBUF | pg.HWSURFACE | pg.OPENGL)
+        pg.display.flip()
+        pg.display.gl_set_attribute(pg.GL_SWAP_CONTROL, 1)
         self.clock = pg.time.Clock()
         print("initilized")
         # initilize opengl
-        glClearColor(0.1 , 0.2 ,0.2 ,1 )
+        glClearColor(0.1, 0.2, 0.2, 1)
+        # glEnable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         self.shader = self.createShaders("shaders/vertex.txt" , "shaders/fragment.txt")
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader , "imageTexture") , 0)
@@ -74,9 +79,9 @@ class Triangle :
             
              #x , y , z , r , g , b ,s ,t 
             self.vertices =(
-                -0.5 , -0.5 , 0 , 1 , 0 , 0 ,  0 , 1, 
-                0.5 ,-0.5 , 0 , 0 , 1 , 0 , 1 ,1 ,
-                 0 ,0.5 , 0 , 0 , 0 , 1 , 0.5 , 0
+                -1 , -1 , 0 , 1 , 0 , 0 ,  0 , 1, 
+                1 ,-1 , 0 , 0 , 1 , 0 , 1 ,0 ,
+                 0 ,1 , 0 , 0 , 0 , 1 , 1 , 0
             )
             self.vertices = np.array(self.vertices , dtype=np.float32)
 
@@ -105,16 +110,19 @@ class Material :
     def __init__(self , filepath):
         self.texture = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D ,  self.texture)
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_NEAREST)
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_WRAP_S , GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_WRAP_T , GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 
 
-        image = pg.image.load(filepath).convert()
+
+        image = pg.image.load(filepath).convert_alpha()
         image_width , image_height = image.get_rect().size
         image_data = pg.image.tostring(image , "RGBA")
         glTexImage2D(GL_TEXTURE_2D , 0 , GL_RGBA , image_width , image_height , 0 , GL_RGBA , GL_UNSIGNED_BYTE , image_data)
+        print("Image Width:", image_width)
+        print("Image Height:", image_height)
         glGenerateMipmap(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D , 0)
 
