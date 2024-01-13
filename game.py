@@ -43,59 +43,118 @@ def draw_gear(x, y, radius, num_teeth, color, rotation):
 def draw_circle(x, y, radius, color):
     pygame.draw.circle(screen, color, (x, y), radius)
 
-def draw_tank(x, y, base_radius, turret_length, turret_width, color, light_color , dark_color, rotation):
-    # Calculate turret position
-    turret_x = int(x +(base_radius + turret_length / 2) * math.cos(math.radians(rotation)))
-    turret_y = int(y  +(base_radius + turret_length / 2) * math.sin(math.radians(rotation)))
 
-    # Draw circular tank base
-    draw_circle(x, y, base_radius+5, BLACK) 
-    draw_circle(x, y, base_radius, dark_color) 
-
-    # Draw tank turret
-    rotated_turret = pygame.Surface((turret_length+5  , turret_width +10), pygame.SRCALPHA)
-    pygame.draw.rect(rotated_turret, BLACK, (0, 0, turret_length+5 , turret_width +10))
-    rotated_turret = pygame.transform.rotate(rotated_turret, -rotation)
-    rect = rotated_turret.get_rect(center=(turret_x, turret_y))
-    screen.blit(rotated_turret, rect.topleft)
-
-    rotated_turret = pygame.Surface((turret_length+5, turret_width), pygame.SRCALPHA)
-    pygame.draw.rect(rotated_turret, dark_color, (0, 0, turret_length+5, turret_width))
-    rotated_turret = pygame.transform.rotate(rotated_turret, -rotation)
-    rect = rotated_turret.get_rect(center=(turret_x, turret_y))
-    screen.blit(rotated_turret, rect.topleft)
 
 
 class Ball:
-    def __init__(self, x, y, radius, color):
+    def __init__(self, x, y, radius, color, direction):
         self.x = x
         self.y = y
         self.radius = radius
         self.color = color
+        self.direction = direction
+        self.moving = False
 
     def draw(self):
-        pygame.draw.circle(screen, BLACK, (self.x, self.y), self.radius + 7)
-        pygame.draw.circle(screen, WHITE, (self.x, self.y), self.radius + 5)
+        pygame.draw.circle(screen, BLACK, (self.x, self.y), self.radius + self.radius // 3)
+        pygame.draw.circle(screen, WHITE, (self.x, self.y), self.radius + self.radius // 5)
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
         pygame.draw.circle(screen, DARK_GREEN, (self.x, self.y), self.radius, 2)
 
+    def move(self, dx, dy):
+        self.x += dx
+        self.y += dy
+
+    def destroy(self):
+        self.radius = 0
+        if self.color == RED:
+            self.x = WIDTH // 16
+        if self.color == BLUE:
+            self.x = WIDTH - WIDTH // 16
+        if self.color == GREEN:
+            self.x = WIDTH // 2
+        self.y = HEIGHT // 2
+        self.direction = 0
+        self.moving = False
+
+
 # Create a ball at the center of the screen
-ball = Ball(WIDTH //2, HEIGHT // 2, 40, GREEN)
+mainBall = Ball(WIDTH //2, HEIGHT // 2, 40, GREEN , 0)
+
+redBall = Ball(WIDTH//16, HEIGHT //2 , 0 , RED , 0)
+blueBall = Ball(WIDTH - WIDTH//16, HEIGHT //2 , 0 , BLUE  , 0)
+
+
+class Tank:
+    def __init__(self, x, y, base_radius, turret_length, turret_width, color, light_color, dark_color, rotation):
+        self.x = x
+        self.y = y
+        self.base_radius = base_radius
+        self.turret_length = turret_length
+        self.turret_width = turret_width
+        self.color = color
+        self.light_color = light_color
+        self.dark_color = dark_color
+        self.rotation = rotation
+        self.deck_center_x = x
+        self.deck_center_y = y
+
+    def draw(self):
+        # Calculate turret position
+        turret_x = int(self.x + (self.base_radius + self.turret_length / 2) * math.cos(math.radians(self.rotation)))
+        turret_y = int(self.y + (self.base_radius + self.turret_length / 2) * math.sin(math.radians(self.rotation)))
+
+        # Draw circular tank base
+        draw_circle(self.x, self.y, self.base_radius + 5, BLACK)
+        draw_circle(self.x, self.y, self.base_radius, self.dark_color)
+
+        # Draw tank turret
+        rotated_turret = pygame.Surface((self.turret_length + 5, self.turret_width + 10), pygame.SRCALPHA)
+        pygame.draw.rect(rotated_turret, BLACK, (0, 0, self.turret_length + 5, self.turret_width + 10))
+        rotated_turret = pygame.transform.rotate(rotated_turret, -self.rotation)
+        rect = rotated_turret.get_rect(center=(turret_x, turret_y))
+        screen.blit(rotated_turret, rect.topleft)
+
+        rotated_turret = pygame.Surface((self.turret_length + 5, self.turret_width), pygame.SRCALPHA)
+        pygame.draw.rect(rotated_turret, self.dark_color, (0, 0, self.turret_length + 5, self.turret_width))
+        rotated_turret = pygame.transform.rotate(rotated_turret, -self.rotation)
+        rect = rotated_turret.get_rect(center=(turret_x, turret_y))
+        screen.blit(rotated_turret, rect.topleft)
 
 
 
 def main():
-    rotation_speed_left = 360 / (5 * FPS)  # One rotation every 5 seconds
-    rotation_speed_right = -360 / (5 * FPS)  # Opposite direction
+    rotation_speed_left = 360 / (4 * FPS)  # One rotation every 4 seconds
+    rotation_speed_right = -360 / (4 * FPS)  # Opposite direction
+    rotation_right_halt = [False , 0]
+    rotation_left_halt = [False, 0] 
 
     rotation_left = -90
     rotation_right = -90
+    ball_speed = 6  # Adjust the speed as needed
+
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LSHIFT:
+                    # Left Shift key is pressed, create a ball at the left player's deck center
+                    redBall.moving = True
+                    rotation_left_halt[0] = True
+                    redBall.direction = rotation_left
+                if event.key == pygame.K_1:
+                    redBall.destroy()
+
+                if event.key == pygame.K_RSHIFT:
+                    # Right Shift key is pressed, create a ball at the right player's deck center
+                    blueBall.moving = True
+                    rotation_right_halt[0] = True
+                    blueBall.direction = rotation_right
+                if event.key == pygame.K_2:
+                    blueBall.destroy()
 
         # Fill the screen with white
         screen.fill(LIGHT_GREEN)
@@ -134,14 +193,51 @@ def main():
         draw_circle(WIDTH // 16, HEIGHT // 2, 35, GREEN)  # Left side
         draw_circle(WIDTH - WIDTH // 16, HEIGHT // 2, 35, GREEN)  # Right side
 
-        # Draw tank-like structure on each side
-        draw_tank(WIDTH // 16, HEIGHT // 2, 25, 40, 20, RED, LIGHT_RED, DARK_RED, rotation_left)  # Left side
-        draw_tank(WIDTH - WIDTH // 16, HEIGHT // 2, 25, 40, 20, BLUE, LIGHT_BLUE, DARK_BLUE, rotation_right)  # Right side
-        ball.draw()
 
+        left_player_tank = Tank(WIDTH // 16, HEIGHT // 2, 25, 40, 20, RED, LIGHT_RED, DARK_RED, rotation_left)
+        right_player_tank = Tank(WIDTH - WIDTH // 16, HEIGHT // 2, 25, 40, 20, BLUE, LIGHT_BLUE, DARK_BLUE, rotation_right)
+        left_player_tank.draw()
+        right_player_tank.draw()
+        mainBall.draw()
+
+        # Move the red ball if the flag is set
+        if redBall.moving:
+            redBall.move(ball_speed * math.cos(math.radians(redBall.direction)),
+                         ball_speed * math.sin(math.radians(redBall.direction)))
+            redBall.draw()
+
+        # Move the blue ball if the flag is set
+        if blueBall.moving:
+            blueBall.move(ball_speed * math.cos(math.radians(blueBall.direction)),
+                          ball_speed * math.sin(math.radians(blueBall.direction)))
+            blueBall.draw()
+
+
+        # destroy the ball if it goes out of the screen
+        if redBall.x < 0 or redBall.x > WIDTH or redBall.y < 0 or redBall.y > HEIGHT:
+            redBall.destroy()
+        if blueBall.x < 0 or blueBall.x > WIDTH or blueBall.y < 0 or blueBall.y > HEIGHT:
+            blueBall.destroy()
+        
+
+        if rotation_left_halt[0] == True:
+            rotation_left_halt[1] += 1
+            rotation_left -= rotation_speed_left
+            redBall.radius = redBall.radius + 0.5
+            if rotation_left_halt[1] == 29:
+                rotation_left_halt[0] = False
+                rotation_left_halt[1] = 0
+        if rotation_right_halt[0] == True:
+            rotation_right_halt[1] += 1
+            blueBall.radius = blueBall.radius + 0.5
+            rotation_right -= rotation_speed_right
+            if rotation_right_halt[1] == 29:
+                rotation_right_halt[0] = False
+                rotation_right_halt[1] = 0
         # Update rotation for the next frame
         rotation_left += rotation_speed_left
         rotation_right += rotation_speed_right
+
 
         pygame.display.flip()
         clock.tick(FPS)
