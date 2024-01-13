@@ -244,7 +244,7 @@ def main():
                 mainBall_speed = 0
 
             # calculate main ball speed after collision
-            mainBall_speed =  mainBall_speed + math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) / 100
+            mainBall_speed =  mainBall_speed + math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) / 65
             redBall.destroy()
 
 
@@ -261,7 +261,7 @@ def main():
             else:
                 mainBall_speed = 0
             # calculate main ball speed after collision
-            mainBall_speed =  mainBall_speed + math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) / 100
+            mainBall_speed =  mainBall_speed + math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) / 65
             blueBall.destroy()
 
 
@@ -269,7 +269,8 @@ def main():
             mainBall.move( mainBall_speed * math.cos(math.radians(mainBall.direction)),
                             mainBall_speed * math.sin(math.radians(mainBall.direction)))
             if mainBall_speed > 0:
-                mainBall_speed = mainBall_speed - 0.0007
+                # decrease the speed of the ball exponentially to simulate friction
+                mainBall_speed = mainBall_speed - (0.0007 / (mainBall_speed * 1.5))
             else:
                 mainBall_speed = 0
                 mainBall.moving = False
