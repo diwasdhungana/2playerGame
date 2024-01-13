@@ -22,6 +22,7 @@ GREEN = (0, 255, 0)
 LIGHT_GREEN = (128, 255, 128)
 DARK_GREEN = (0, 128, 0)
 BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
 
 
 # Set up display
@@ -82,7 +83,10 @@ class Ball:
 mainBall = Ball(WIDTH //2, HEIGHT // 2, 40, GREEN , 0)
 
 redBall = Ball(WIDTH//16, HEIGHT //2 , 0 , RED , 0)
+redBallIndicator = Ball(WIDTH//64, HEIGHT //2 , 10 , GREEN , 0)
 blueBall = Ball(WIDTH - WIDTH//16, HEIGHT //2 , 0 , BLUE  , 0)
+blueBallIndicator = Ball(WIDTH - WIDTH//64, HEIGHT //2 , 10 , GREEN , 0)
+
 
 
 class Tank:
@@ -128,10 +132,15 @@ def main():
     rotation_speed_right = -360 / (4 * FPS)  # Opposite direction
     rotation_right_halt = [False , 0]
     rotation_left_halt = [False, 0] 
+    red_button_hold = [False, 0]
+    blue_button_hold = [False, 0]
 
     rotation_left = -90
     rotation_right = -90
     ball_speed = 6  # Adjust the speed as needed
+    mainBall_speed = 0
+    mainBall_speed_left = 0
+    mainBall_speed_right = 0
 
 
     while True:
@@ -142,17 +151,23 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LSHIFT:
                     # Left Shift key is pressed, create a ball at the left player's deck center
-                    redBall.moving = True
-                    rotation_left_halt[0] = True
-                    redBall.direction = rotation_left
+                    if red_button_hold[0] == False:
+                        redBall.moving = True
+                        rotation_left_halt[0] = True
+                        redBall.direction = rotation_left
+                        red_button_hold[0] = True
+                        redBallIndicator.color = GRAY
                 if event.key == pygame.K_1:
                     redBall.destroy()
 
                 if event.key == pygame.K_RSHIFT:
                     # Right Shift key is pressed, create a ball at the right player's deck center
-                    blueBall.moving = True
-                    rotation_right_halt[0] = True
-                    blueBall.direction = rotation_right
+                    if blue_button_hold[0] == False:
+                        blueBall.moving = True
+                        rotation_right_halt[0] = True
+                        blueBall.direction = rotation_right
+                        blue_button_hold[0] = True
+                        blueBallIndicator.color = GRAY
                 if event.key == pygame.K_2:
                     blueBall.destroy()
 
@@ -194,6 +209,8 @@ def main():
         draw_circle(WIDTH - WIDTH // 16, HEIGHT // 2, 35, GREEN)  # Right side
 
 
+        redBallIndicator.draw()
+        blueBallIndicator.draw()
         left_player_tank = Tank(WIDTH // 16, HEIGHT // 2, 25, 40, 20, RED, LIGHT_RED, DARK_RED, rotation_left)
         right_player_tank = Tank(WIDTH - WIDTH // 16, HEIGHT // 2, 25, 40, 20, BLUE, LIGHT_BLUE, DARK_BLUE, rotation_right)
         left_player_tank.draw()
@@ -213,12 +230,81 @@ def main():
             blueBall.draw()
 
 
+        # check for the collision of red ball and main ball
+        if math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) <= redBall.radius + mainBall.radius:
+            mainBall.moving = True;
+            # calculate the direction of main ball after collision
+            mainBall.direction =  math.degrees(math.atan2(redBall.y - mainBall.y, redBall.x - mainBall.x)) + 180
+            # check to see which is greater speed right or left and assign it to main ball speed minus the other
+            if mainBall_speed_left > mainBall_speed_right:
+                mainBall_speed = mainBall_speed_left - mainBall_speed_right
+            elif mainBall_speed_left < mainBall_speed_right:
+                mainBall_speed = mainBall_speed_right - mainBall_speed_left
+            else:
+                mainBall_speed = 0
+
+            # calculate main ball speed after collision
+            mainBall_speed =  mainBall_speed + math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) / 100
+            redBall.destroy()
+
+
+        # check for the collision of blue ball and main ball
+        if math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) <= blueBall.radius + mainBall.radius:
+            mainBall.moving = True;
+            # calculate the direction of main ball after collision
+            mainBall.direction =  math.degrees(math.atan2(blueBall.y - mainBall.y, blueBall.x - mainBall.x)) + 180
+            # check to see which is greater speed right or left and assign it to main ball speed minus the other
+            if mainBall_speed_left > mainBall_speed_right:
+                mainBall_speed = mainBall_speed_left - mainBall_speed_right
+            elif mainBall_speed_left < mainBall_speed_right:
+                mainBall_speed = mainBall_speed_right - mainBall_speed_left
+            else:
+                mainBall_speed = 0
+            # calculate main ball speed after collision
+            mainBall_speed =  mainBall_speed + math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) / 100
+            blueBall.destroy()
+
+
+        if mainBall.moving:
+            mainBall.move( mainBall_speed * math.cos(math.radians(mainBall.direction)),
+                            mainBall_speed * math.sin(math.radians(mainBall.direction)))
+            if mainBall_speed > 0:
+                mainBall_speed = mainBall_speed - 0.0007
+            else:
+                mainBall_speed = 0
+                mainBall.moving = False
+            
+        
+        # destroy and reset the main ball if it goes out of the screen
+        if mainBall.x < 0 or mainBall.x > WIDTH or mainBall.y < 0 or mainBall.y > HEIGHT:
+            mainBall.destroy()
+            mainBall_speed = 0
+            mainBall.moving = False
+            mainBall.x = WIDTH // 2
+            mainBall.y = HEIGHT // 2
+            mainBall.direction = 0
+
         # destroy the ball if it goes out of the screen
         if redBall.x < 0 or redBall.x > WIDTH or redBall.y < 0 or redBall.y > HEIGHT:
             redBall.destroy()
         if blueBall.x < 0 or blueBall.x > WIDTH or blueBall.y < 0 or blueBall.y > HEIGHT:
             blueBall.destroy()
         
+        # checking for red button hold
+        if red_button_hold[0] == True:
+            red_button_hold[1] += 1
+            if red_button_hold[1] == 150:
+                red_button_hold[0] = False
+                red_button_hold[1] = 0
+                redBallIndicator.color = GREEN
+        # checking for blue button hold
+        if blue_button_hold[0] == True:
+            blue_button_hold[1] += 1
+            if blue_button_hold[1] == 150:
+                blue_button_hold[0] = False
+                blue_button_hold[1] = 0
+                blueBallIndicator.color = GREEN
+
 
         if rotation_left_halt[0] == True:
             rotation_left_halt[1] += 1
@@ -234,6 +320,7 @@ def main():
             if rotation_right_halt[1] == 29:
                 rotation_right_halt[0] = False
                 rotation_right_halt[1] = 0
+
         # Update rotation for the next frame
         rotation_left += rotation_speed_left
         rotation_right += rotation_speed_right
