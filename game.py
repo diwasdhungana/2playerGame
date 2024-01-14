@@ -98,7 +98,19 @@ redBallIndicator = Ball(WIDTH//64, HEIGHT //2 , 10 , GREEN , 0)
 blueBall = Ball(WIDTH - WIDTH//16, HEIGHT //2 , 0 , BLUE  , 0)
 blueBallIndicator = Ball(WIDTH - WIDTH//64, HEIGHT //2 , 10 , GREEN , 0)
 
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.score = 0
+    
+    def updateScore(self):
+        self.score += 1
+    
+    def resetScore(self):
+        self.score = 0
 
+redPlayer = Player("Red")
+bluePlayer = Player("Blue")
 
 class Tank:
     def __init__(self, x, y, base_radius, turret_length, turret_width, color, light_color, dark_color, rotation):
@@ -151,49 +163,60 @@ def detectWallImpact(ball):
         if ball.impact == 2:
             ball.destroy()
 
-def drawInfoBox(ball , infobox , red_button_hold , blue_button_hold , mainBall_speed  ) :
-    mainBall_speed = 0
+def textToDisplayRect(text_to_display , color):
+    pygame.draw.rect(screen, BLACK, (WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2))
+    pygame.draw.rect(screen, color, (WIDTH//4 + 10, HEIGHT//4 + 10, WIDTH//2 - 20, HEIGHT//2 - 20)) 
+    pygame.draw.rect(screen, BLACK, (WIDTH//4 + 20, HEIGHT//4 + 20, WIDTH//2 - 40, HEIGHT//2 - 40))
+    pygame.draw.rect(screen, color, (WIDTH//4 + 30, HEIGHT//4 + 30, WIDTH//2 - 60, HEIGHT//2 - 60))
+    pygame.draw.rect(screen, BLACK, (WIDTH//4 + 40, HEIGHT//4 + 40, WIDTH//2 - 80, HEIGHT//2 - 80))
+    pygame.draw.rect(screen, color, (WIDTH//4 + 50, HEIGHT//4 + 50, WIDTH//2 - 100, HEIGHT//2 - 100))
+    pygame.draw.rect(screen, BLACK, (WIDTH//4 + 60, HEIGHT//4 + 60, WIDTH//2 - 120, HEIGHT//2 - 120))
+    font = pygame.font.SysFont("comicsansms", 72)
+    text = font.render(text_to_display, True, color)
+    textRect = text.get_rect()
+    textRect.center = (WIDTH // 2, HEIGHT // 2)
+    screen.blit(text, textRect)
+
+
+def drawInfoBox(ball , infobox , red_button_hold , blue_button_hold   ) :
     mainBall.color = ball
     red_button_hold[0] = True
     blue_button_hold[0] = True
     infobox[1] += 1
-    if infobox[1] == 120 :
+    if infobox[1] == 60 :
             infobox[0] = True
     if infobox[0] == True:
         
         if ball == RED:
-            pygame.draw.rect(screen, BLACK, (WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2))
-            pygame.draw.rect(screen, RED, (WIDTH//4 + 10, HEIGHT//4 + 10, WIDTH//2 - 20, HEIGHT//2 - 20)) 
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 20, HEIGHT//4 + 20, WIDTH//2 - 40, HEIGHT//2 - 40))
-            pygame.draw.rect(screen, RED, (WIDTH//4 + 30, HEIGHT//4 + 30, WIDTH//2 - 60, HEIGHT//2 - 60))
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 40, HEIGHT//4 + 40, WIDTH//2 - 80, HEIGHT//2 - 80))
-            pygame.draw.rect(screen, RED, (WIDTH//4 + 50, HEIGHT//4 + 50, WIDTH//2 - 100, HEIGHT//2 - 100))
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 60, HEIGHT//4 + 60, WIDTH//2 - 120, HEIGHT//2 - 120))
-            # type red Wins
-            font = pygame.font.SysFont("comicsansms", 72)
-            text = font.render("RED WINS", True, RED)
-            screen.blit(text, (WIDTH//4 + 70, HEIGHT//4 + 70))
+            
+            if redPlayer.score == 2:
+                text_to_display = "Red Player Won!"
+            else :
+                text_to_display = "Red Player Scored"
+            textToDisplayRect(text_to_display , RED)
+
 
         if ball == BLUE:
-            pygame.draw.rect(screen, BLACK, (WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2))
-            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 10, HEIGHT//4 + 10, WIDTH//2 - 20, HEIGHT//2 - 20))
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 20, HEIGHT//4 + 20, WIDTH//2 - 40, HEIGHT//2 - 40))
-            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 30, HEIGHT//4 + 30, WIDTH//2 - 60, HEIGHT//2 - 60))
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 40, HEIGHT//4 + 40, WIDTH//2 - 80, HEIGHT//2 - 80))
-            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 50, HEIGHT//4 + 50, WIDTH//2 - 100, HEIGHT//2 - 100))
-            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 60, HEIGHT//4 + 60, WIDTH//2 - 120, HEIGHT//2 - 120))
-            # type blue Wins
-            font = pygame.font.SysFont("comicsansms", 72)
-            text = font.render("BLUE WINS", True, BLUE)
-            screen.blit(text, (WIDTH//4 + 70, HEIGHT//4 + 70))
-            
-        if infobox[1] >= 300:
+            if bluePlayer.score == 2:
+                text_to_display = "Blue Player Won!"
+            else :
+                text_to_display = "Blue Player Scored"
+            textToDisplayRect(text_to_display , BLUE)
+
+        if infobox[1] >= 240:
                 red_button_hold[0] = False
+                if ball == BLUE:
+                    bluePlayer.updateScore()
+                if ball == RED:
+                    redPlayer.updateScore()
                 blue_button_hold[0] = False
                 redBall.destroy()
                 blueBall.destroy()
                 mainBall.color = GREEN
                 mainBall.reset()
+                if redPlayer.score == 3 or bluePlayer.score == 3:
+                    redPlayer.resetScore()
+                    bluePlayer.resetScore()
                 infobox[1] = 0
                 infobox[0] = False
 
@@ -270,6 +293,35 @@ def main():
         for i in range(1, 4):
             pygame.draw.circle(screen, RED, (WIDTH // 16, i * HEIGHT // 4), 20)  # Left side
             pygame.draw.circle(screen, BLUE, (WIDTH - WIDTH // 16, i * HEIGHT // 4), 20)  # Right side
+
+        font = pygame.font.SysFont("comicsansms", 72)
+
+        # display each player's score
+        text = font.render(str(redPlayer.score), True, BLACK)
+        textRect = text.get_rect()
+        textRect.center = (WIDTH // 16, HEIGHT // 8)
+        screen.blit(text, textRect)
+
+
+        text = font.render(str(bluePlayer.score), True, BLACK)
+        textRect = text.get_rect()
+        textRect.center = (WIDTH - WIDTH // 16, HEIGHT // 8)
+        screen.blit(text, textRect)
+
+        font = pygame.font.SysFont("comicsansms", 30)
+
+        text = font.render("Left Shift", True, BLACK)
+        textRect = text.get_rect()
+        textRect.center = (WIDTH // 16, HEIGHT - HEIGHT // 8)
+        screen.blit(text, textRect)
+
+        text = font.render("Right Shift", True, BLACK)
+        textRect = text.get_rect()
+        textRect.center = (WIDTH - WIDTH // 16, HEIGHT - HEIGHT // 8)
+        screen.blit(text, textRect)
+
+
+        
 
         # Draw a line of players at the midpoint of each part of the court
         pygame.draw.line(screen, RED, (WIDTH // 4, 0), (WIDTH // 4, HEIGHT), 2)  # Left side
@@ -367,17 +419,7 @@ def main():
         detectWallImpact(blueBall)
 
 
-        # detect if main ball goes on red or blue side
-        if mainBall.x <= WIDTH // 4 - 40:
-            drawInfoBox(BLUE , infobox , red_button_hold , blue_button_hold , mainBall_speed)
-            
-            
-
-        if mainBall.x >= WIDTH - WIDTH // 4 + 40:
-            drawInfoBox(RED , infobox , red_button_hold , blue_button_hold , mainBall_speed)
-            
         
-
         # checking for red button hold
         if red_button_hold[0] == True:
             red_button_hold[1] += 1
@@ -413,6 +455,21 @@ def main():
         rotation_left += rotation_speed_left
         rotation_right += rotation_speed_right
 
+        # detect if main ball goes on red or blue side
+        if mainBall.x <= WIDTH // 4 - 40:
+            drawInfoBox(BLUE , infobox , red_button_hold , blue_button_hold )
+            mainBall_speed = 0
+            mainBall.moving = False
+            rotation_left = -90
+            rotation_right = -90
+            
+
+        if mainBall.x >= WIDTH - WIDTH // 4 + 40:
+            drawInfoBox(RED , infobox , red_button_hold , blue_button_hold )
+            mainBall_speed = 0
+            mainBall.moving = False
+            rotation_left = -90
+            rotation_right = -90
 
         pygame.display.flip()
         clock.tick(FPS)
