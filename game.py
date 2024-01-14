@@ -55,6 +55,7 @@ class Ball:
         self.color = color
         self.direction = direction
         self.moving = False
+        self.impact = 0
 
     def draw(self):
         pygame.draw.circle(screen, BLACK, (self.x, self.y), self.radius + self.radius // 3)
@@ -77,6 +78,8 @@ class Ball:
         self.y = HEIGHT // 2
         self.direction = 0
         self.moving = False
+        self.impact = 0
+        
 
 
 # Create a ball at the center of the screen
@@ -124,6 +127,23 @@ class Tank:
         rotated_turret = pygame.transform.rotate(rotated_turret, -self.rotation)
         rect = rotated_turret.get_rect(center=(turret_x, turret_y))
         screen.blit(rotated_turret, rect.topleft)
+
+def detectWallImpact(ball):
+    # check for the collision of main ball and top wall
+    if ball.y - ball.radius <= 40:
+        print("top Impact") 
+        ball.direction = ball.direction - 2 * (ball.direction - 180)
+        ball.impact += 1
+
+    # check for the collision of main ball and bottom wall
+    if ball.y + ball.radius >= HEIGHT-40:
+        print("bottom Impact")
+        ball.direction = ball.direction - 2 * (ball.direction - 180)
+        ball.impact += 1
+    
+    if ball.color != GREEN:
+        if ball.impact == 2:
+            ball.destroy()
 
 
 
@@ -281,15 +301,20 @@ def main():
                 mainBall_speed = 0
                 mainBall.moving = False
             
-        # check for the collision of main ball and top wall
-        if mainBall.y - mainBall.radius <= 40:
-            print("top Impact") 
-            mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
+        # # check for the collision of main ball and top wall
+        # if mainBall.y - mainBall.radius <= 40:
+        #     print("top Impact") 
+        #     mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
 
-        # check for the collision of main ball and bottom wall
-        if mainBall.y + mainBall.radius >= HEIGHT-40:
-            print("bottom Impact")
-            mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
+        # # check for the collision of main ball and bottom wall
+        # if mainBall.y + mainBall.radius >= HEIGHT-40:
+        #     print("bottom Impact")
+        #     mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
+
+        detectWallImpact(mainBall)
+        detectWallImpact(redBall)
+        detectWallImpact(blueBall)
+
 
         # destroy the ball if it goes out of the screen
         if redBall.x < 0 or redBall.x > WIDTH or redBall.y < 0 or redBall.y > HEIGHT:
@@ -297,6 +322,7 @@ def main():
         if blueBall.x < 0 or blueBall.x > WIDTH or blueBall.y < 0 or blueBall.y > HEIGHT:
             blueBall.destroy()
         
+
         # checking for red button hold
         if red_button_hold[0] == True:
             red_button_hold[1] += 1
