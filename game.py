@@ -80,6 +80,14 @@ class Ball:
         self.moving = False
         self.impact = 0
 
+    def reset(self):
+        self.radius = 40
+        self.x = WIDTH // 2
+        self.y = HEIGHT // 2
+        self.direction = 0
+        self.moving = False
+        self.impact = 0
+
 
 
 # Create a ball at the center of the screen
@@ -131,19 +139,63 @@ class Tank:
 def detectWallImpact(ball):
     # check for the collision of main ball and top wall
     if ball.y - ball.radius <= 40:
-        print("top Impact") 
         ball.direction = ball.direction - 2 * (ball.direction - 180)
         ball.impact += 1
 
     # check for the collision of main ball and bottom wall
     if ball.y + ball.radius >= HEIGHT-40:
-        print("bottom Impact")
         ball.direction = ball.direction - 2 * (ball.direction - 180)
         ball.impact += 1
     
     if ball.color != GREEN:
         if ball.impact == 2:
             ball.destroy()
+
+def drawInfoBox(ball , infobox , red_button_hold , blue_button_hold , mainBall_speed  ) :
+    mainBall_speed = 0
+    mainBall.color = ball
+    red_button_hold[0] = True
+    blue_button_hold[0] = True
+    infobox[1] += 1
+    if infobox[1] == 120 :
+            infobox[0] = True
+    if infobox[0] == True:
+        
+        if ball == RED:
+            pygame.draw.rect(screen, BLACK, (WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2))
+            pygame.draw.rect(screen, RED, (WIDTH//4 + 10, HEIGHT//4 + 10, WIDTH//2 - 20, HEIGHT//2 - 20)) 
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 20, HEIGHT//4 + 20, WIDTH//2 - 40, HEIGHT//2 - 40))
+            pygame.draw.rect(screen, RED, (WIDTH//4 + 30, HEIGHT//4 + 30, WIDTH//2 - 60, HEIGHT//2 - 60))
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 40, HEIGHT//4 + 40, WIDTH//2 - 80, HEIGHT//2 - 80))
+            pygame.draw.rect(screen, RED, (WIDTH//4 + 50, HEIGHT//4 + 50, WIDTH//2 - 100, HEIGHT//2 - 100))
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 60, HEIGHT//4 + 60, WIDTH//2 - 120, HEIGHT//2 - 120))
+            # type red Wins
+            font = pygame.font.SysFont("comicsansms", 72)
+            text = font.render("RED WINS", True, RED)
+            screen.blit(text, (WIDTH//4 + 70, HEIGHT//4 + 70))
+
+        if ball == BLUE:
+            pygame.draw.rect(screen, BLACK, (WIDTH//4, HEIGHT//4, WIDTH//2, HEIGHT//2))
+            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 10, HEIGHT//4 + 10, WIDTH//2 - 20, HEIGHT//2 - 20))
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 20, HEIGHT//4 + 20, WIDTH//2 - 40, HEIGHT//2 - 40))
+            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 30, HEIGHT//4 + 30, WIDTH//2 - 60, HEIGHT//2 - 60))
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 40, HEIGHT//4 + 40, WIDTH//2 - 80, HEIGHT//2 - 80))
+            pygame.draw.rect(screen, BLUE, (WIDTH//4 + 50, HEIGHT//4 + 50, WIDTH//2 - 100, HEIGHT//2 - 100))
+            pygame.draw.rect(screen, BLACK, (WIDTH//4 + 60, HEIGHT//4 + 60, WIDTH//2 - 120, HEIGHT//2 - 120))
+            # type blue Wins
+            font = pygame.font.SysFont("comicsansms", 72)
+            text = font.render("BLUE WINS", True, BLUE)
+            screen.blit(text, (WIDTH//4 + 70, HEIGHT//4 + 70))
+            
+        if infobox[1] >= 300:
+                red_button_hold[0] = False
+                blue_button_hold[0] = False
+                redBall.destroy()
+                blueBall.destroy()
+                mainBall.color = GREEN
+                mainBall.reset()
+                infobox[1] = 0
+                infobox[0] = False
 
 
 
@@ -161,6 +213,7 @@ def main():
     mainBall_speed = 0
     mainBall_speed_left = 0
     mainBall_speed_right = 0
+    infobox = [ False , 0  ]
 
 
     while True:
@@ -314,11 +367,15 @@ def main():
         detectWallImpact(blueBall)
 
 
-        # destroy the ball if it goes out of the screen
-        if redBall.x < 0 or redBall.x > WIDTH or redBall.y < 0 or redBall.y > HEIGHT:
-            redBall.destroy()
-        if blueBall.x < 0 or blueBall.x > WIDTH or blueBall.y < 0 or blueBall.y > HEIGHT:
-            blueBall.destroy()
+        # detect if main ball goes on red or blue side
+        if mainBall.x <= WIDTH // 4 - 40:
+            drawInfoBox(BLUE , infobox , red_button_hold , blue_button_hold , mainBall_speed)
+            
+            
+
+        if mainBall.x >= WIDTH - WIDTH // 4 + 40:
+            drawInfoBox(RED , infobox , red_button_hold , blue_button_hold , mainBall_speed)
+            
         
 
         # checking for red button hold
