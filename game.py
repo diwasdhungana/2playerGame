@@ -174,13 +174,19 @@ def main():
         # Fill the screen with white
         screen.fill(LIGHT_GREEN)
 
+        # draw black colored bar at top and bottom of the screen of width 30 to bounce the mainball back at playing area.
+        pygame.draw.rect(screen, BLACK, (0, 0, WIDTH, 30))
+        pygame.draw.rect(screen, BLACK, (0, HEIGHT - 30, WIDTH, 30))
+
         # Draw red and blue rectangles on each side
         pygame.draw.rect(screen, RED, (0, 0, WIDTH // 8, HEIGHT))
         pygame.draw.rect(screen, BLUE, (WIDTH - WIDTH // 8, 0, WIDTH // 8, HEIGHT))
 
+
         # Draw light-colored playing area near the deck of each player
         pygame.draw.rect(screen, LIGHT_RED, (0, HEIGHT // 4, WIDTH // 8, HEIGHT // 2))  # Left side
         pygame.draw.rect(screen, LIGHT_BLUE, (WIDTH - WIDTH // 8, HEIGHT // 4, WIDTH // 8, HEIGHT // 2))  # Right side
+
 
         # Draw a thin center black line
         pygame.draw.line(screen, BLACK, (WIDTH // 2, 0), (WIDTH // 2, HEIGHT), 2)
@@ -275,15 +281,15 @@ def main():
                 mainBall_speed = 0
                 mainBall.moving = False
             
-        
-        # destroy and reset the main ball if it goes out of the screen
-        if mainBall.x < 0 or mainBall.x > WIDTH or mainBall.y < 0 or mainBall.y > HEIGHT:
-            mainBall.destroy()
-            mainBall_speed = 0
-            mainBall.moving = False
-            mainBall.x = WIDTH // 2
-            mainBall.y = HEIGHT // 2
-            mainBall.direction = 0
+        # check for the collision of main ball and top wall
+        if mainBall.y - mainBall.radius <= 40:
+            print("top Impact") 
+            mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
+
+        # check for the collision of main ball and bottom wall
+        if mainBall.y + mainBall.radius >= HEIGHT-40:
+            print("bottom Impact")
+            mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
 
         # destroy the ball if it goes out of the screen
         if redBall.x < 0 or redBall.x > WIDTH or redBall.y < 0 or redBall.y > HEIGHT:
