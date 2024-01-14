@@ -79,7 +79,7 @@ class Ball:
         self.direction = 0
         self.moving = False
         self.impact = 0
-        
+
 
 
 # Create a ball at the center of the screen
@@ -172,6 +172,7 @@ def main():
                 if event.key == pygame.K_LSHIFT:
                     # Left Shift key is pressed, create a ball at the left player's deck center
                     if red_button_hold[0] == False:
+                        redBall.destroy()
                         redBall.moving = True
                         rotation_left_halt[0] = True
                         redBall.direction = rotation_left
@@ -183,6 +184,7 @@ def main():
                 if event.key == pygame.K_RSHIFT:
                     # Right Shift key is pressed, create a ball at the right player's deck center
                     if blue_button_hold[0] == False:
+                        blueBall.destroy()
                         blueBall.moving = True
                         rotation_right_halt[0] = True
                         blueBall.direction = rotation_right
@@ -257,7 +259,7 @@ def main():
 
 
         # check for the collision of red ball and main ball
-        if math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) <= redBall.radius + mainBall.radius:
+        if math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) <= redBall.radius + mainBall.radius + 10:
             mainBall.moving = True;
             # calculate the direction of main ball after collision
             mainBall.direction =  math.degrees(math.atan2(redBall.y - mainBall.y, redBall.x - mainBall.x)) + 180
@@ -275,7 +277,7 @@ def main():
 
 
         # check for the collision of blue ball and main ball
-        if math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) <= blueBall.radius + mainBall.radius:
+        if math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) <= blueBall.radius + mainBall.radius + 10:
             mainBall.moving = True;
             # calculate the direction of main ball after collision
             mainBall.direction =  math.degrees(math.atan2(blueBall.y - mainBall.y, blueBall.x - mainBall.x)) + 180
@@ -301,15 +303,11 @@ def main():
                 mainBall_speed = 0
                 mainBall.moving = False
             
-        # # check for the collision of main ball and top wall
-        # if mainBall.y - mainBall.radius <= 40:
-        #     print("top Impact") 
-        #     mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
-
-        # # check for the collision of main ball and bottom wall
-        # if mainBall.y + mainBall.radius >= HEIGHT-40:
-        #     print("bottom Impact")
-        #     mainBall.direction = mainBall.direction - 2 * (mainBall.direction - 180)
+        
+        # check for the collision of red and blue ball
+        if math.sqrt((redBall.x - blueBall.x) ** 2 + (redBall.y - blueBall.y) ** 2) <= redBall.radius + blueBall.radius:
+            redBall.destroy()
+            blueBall.destroy()
 
         detectWallImpact(mainBall)
         detectWallImpact(redBall)
