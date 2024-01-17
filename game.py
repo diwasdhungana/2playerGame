@@ -223,8 +223,8 @@ def drawInfoBox(ball , infobox , red_button_hold , blue_button_hold   ) :
 
 
 def main():
-    rotation_speed_left = 360 / (4 * FPS)  # One rotation every 4 seconds
-    rotation_speed_right = -360 / (4 * FPS)  # Opposite direction
+    rotation_speed_left = 360 / (3 * FPS)  # One rotation every 3 seconds
+    rotation_speed_right = -360 / (3 * FPS)  # Opposite direction
     rotation_right_halt = [False , 0]
     rotation_left_halt = [False, 0] 
     red_button_hold = [False, 0]
@@ -237,6 +237,8 @@ def main():
     mainBall_speed_left = 0
     mainBall_speed_right = 0
     infobox = [ False , 0  ]
+    friction_mainBall = 0.0012
+    button_hold = 2 * FPS # 2 seconds
 
 
     while True:
@@ -363,47 +365,64 @@ def main():
             blueBall.draw()
 
 
-        # check for the collision of red ball and main ball
-        if math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) <= redBall.radius + mainBall.radius + 10:
-            mainBall.moving = True;
-            # calculate the direction of main ball after collision
-            mainBall.direction =  math.degrees(math.atan2(redBall.y - mainBall.y, redBall.x - mainBall.x)) + 180
-            # check to see which is greater speed right or left and assign it to main ball speed minus the other
-            if mainBall_speed_left > mainBall_speed_right:
-                mainBall_speed = mainBall_speed_left - mainBall_speed_right
-            elif mainBall_speed_left < mainBall_speed_right:
-                mainBall_speed = mainBall_speed_right - mainBall_speed_left
-            else:
-                mainBall_speed = 0
-
-            # calculate main ball speed after collision
-            mainBall_speed =  mainBall_speed + math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) / 65
-            redBall.destroy()
-
-
         # check for the collision of blue ball and main ball
         if math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) <= blueBall.radius + mainBall.radius + 10:
             mainBall.moving = True;
             # calculate the direction of main ball after collision
+
+            # calculate main ball speed after collision
+            mainBall_speed =  mainBall_speed + math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) / 65
+
+
             mainBall.direction =  math.degrees(math.atan2(blueBall.y - mainBall.y, blueBall.x - mainBall.x)) + 180
             # check to see which is greater speed right or left and assign it to main ball speed minus the other
             if mainBall_speed_left > mainBall_speed_right:
-                mainBall_speed = mainBall_speed_left - mainBall_speed_right
+                mainBall_speed = mainBall_speed + mainBall_speed_left
             elif mainBall_speed_left < mainBall_speed_right:
-                mainBall_speed = mainBall_speed_right - mainBall_speed_left
-            else:
-                mainBall_speed = 0
-            # calculate main ball speed after collision
-            mainBall_speed =  mainBall_speed + math.sqrt((blueBall.x - mainBall.x) ** 2 + (blueBall.y - mainBall.y) ** 2) / 65
+                mainBall_speed = mainBall_speed - mainBall_speed_right*1.2
+            
+            mainBall_speed_left = mainBall_speed
+
             blueBall.destroy()
+
+        # check for the collision of red ball and main ball
+        if math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) <= redBall.radius + mainBall.radius + 10:
+            mainBall.moving = True;
+            # calculate the direction of main ball after collision
+
+            # calculate main ball speed after collision
+            mainBall_speed =  mainBall_speed + math.sqrt((redBall.x - mainBall.x) ** 2 + (redBall.y - mainBall.y) ** 2) / 65
+
+
+            mainBall.direction =  math.degrees(math.atan2(redBall.y - mainBall.y, redBall.x - mainBall.x)) + 180
+            # check to see which is greater speed right or left and assign it to main ball speed minus the other
+            if mainBall_speed_right > mainBall_speed_left:
+                mainBall_speed = mainBall_speed + mainBall_speed_right
+            elif mainBall_speed_right < mainBall_speed_left:
+                mainBall_speed = mainBall_speed - mainBall_speed_left*1.2
+            
+            mainBall_speed_right = mainBall_speed
+
+            redBall.destroy()
 
 
         if mainBall.moving:
             mainBall.move( mainBall_speed * math.cos(math.radians(mainBall.direction)),
                             mainBall_speed * math.sin(math.radians(mainBall.direction)))
+            
+            # if mainball is moving toward left side of the screen
+            if mainBall.direction >= 90 and mainBall.direction <= 270:
+                mainBall_speed_left = mainBall_speed
+                mainBall_speed_right = 0
+            # if mainball is moving toward right side of the screen
+            if mainBall.direction <= 90 or mainBall.direction >= 270:
+                mainBall_speed_right = mainBall_speed
+                mainBall_speed_left = 0
+
+
             if mainBall_speed > 0:
                 # decrease the speed of the ball exponentially to simulate friction
-                mainBall_speed = mainBall_speed - (0.0007 / (mainBall_speed * 1.5))
+                mainBall_speed = mainBall_speed - (friction_mainBall / (mainBall_speed ))
             else:
                 mainBall_speed = 0
                 mainBall.moving = False
@@ -423,14 +442,14 @@ def main():
         # checking for red button hold
         if red_button_hold[0] == True:
             red_button_hold[1] += 1
-            if red_button_hold[1] == 150:
+            if red_button_hold[1] == button_hold:
                 red_button_hold[0] = False
                 red_button_hold[1] = 0
                 redBallIndicator.color = GREEN
         # checking for blue button hold
         if blue_button_hold[0] == True:
             blue_button_hold[1] += 1
-            if blue_button_hold[1] == 150:
+            if blue_button_hold[1] == button_hold:
                 blue_button_hold[0] = False
                 blue_button_hold[1] = 0
                 blueBallIndicator.color = GREEN
@@ -456,17 +475,21 @@ def main():
         rotation_right += rotation_speed_right
 
         # detect if main ball goes on red or blue side
-        if mainBall.x <= WIDTH // 4 - 40:
+        if mainBall.x < WIDTH // 4 - 40:
             drawInfoBox(BLUE , infobox , red_button_hold , blue_button_hold )
             mainBall_speed = 0
+            mainBall_speed_left = 0
+            mainBall_speed_right = 0
             mainBall.moving = False
             rotation_left = -90
             rotation_right = -90
             
 
-        if mainBall.x >= WIDTH - WIDTH // 4 + 40:
+        if mainBall.x > WIDTH - WIDTH // 4 + 40:
             drawInfoBox(RED , infobox , red_button_hold , blue_button_hold )
             mainBall_speed = 0
+            mainBall_speed_left = 0
+            mainBall_speed_right = 0
             mainBall.moving = False
             rotation_left = -90
             rotation_right = -90
