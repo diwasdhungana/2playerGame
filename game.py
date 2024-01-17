@@ -8,7 +8,7 @@ pygame.init()
 # Constants
 WIDTH = 1366
 HEIGHT = 768
-FPS = 60
+FPS = 120
 
 # Colors
 WHITE = (255, 255, 255)
@@ -232,12 +232,12 @@ def main():
 
     rotation_left = -90
     rotation_right = -90
-    ball_speed = 6  # Adjust the speed as needed
+    ball_speed = 5  # Adjust the speed as needed
     mainBall_speed = 0
     mainBall_speed_left = 0
     mainBall_speed_right = 0
     infobox = [ False , 0  ]
-    friction_mainBall = 0.0012
+    friction_mainBall = 0.001
     button_hold = 2 * FPS # 2 seconds
 
 
